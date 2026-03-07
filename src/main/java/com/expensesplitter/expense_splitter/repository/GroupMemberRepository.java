@@ -1,4 +1,16 @@
 package com.expensesplitter.expense_splitter.repository;
 
-public interface GroupMemberRepository {
+import com.expensesplitter.expense_splitter.entity.Group;
+import com.expensesplitter.expense_splitter.entity.GroupMember;
+import com.expensesplitter.expense_splitter.entity.User;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.List;
+import java.util.Optional;
+
+public interface GroupMemberRepository extends JpaRepository<GroupMember,Long> {
+
+    List<GroupMember> findByGroup(Group group);
+
+    Optional<GroupMember> findByGroupAndUser(Group group, User user);
 }
