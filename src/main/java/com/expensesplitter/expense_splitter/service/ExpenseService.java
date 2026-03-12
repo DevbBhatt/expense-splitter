@@ -44,6 +44,7 @@ public class ExpenseService {
         expense.setGroup(group);
         expense.setPaidBy(user);
 
+
         return expenseRepository.save(expense);
     }
 
@@ -63,7 +64,7 @@ public class ExpenseService {
 
     }
 
-    pub
+
 
 
     public Expense deleteExpense(Long expenseId) {
