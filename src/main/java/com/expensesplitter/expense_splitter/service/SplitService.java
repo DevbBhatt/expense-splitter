@@ -20,6 +20,9 @@ public class SplitService {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private ExpenseRepository expenseRepository;
+
     public void splitExpense(Expense expense, List<SplitRequest> splits){
 
         if ("EQUAL".equalsIgnoreCase(expense.getSplitType())) {
@@ -37,6 +40,8 @@ public class SplitService {
             throw new RuntimeException("Invalid split type");
         }
     }
+
+
 
     private void equalSplit(Expense expense) {
 
@@ -94,5 +99,11 @@ public class SplitService {
 
         }
 
+    }
+
+    public List<ExpenseSplit> getExpenseSplits(Long expenseId) {
+        Expense expense = expenseRepository.findById(expenseId)
+                .orElseThrow(() -> new RuntimeException("Expense Not Found"));
+        return expenseSplitRepository.findByExpense(expense);
     }
 }
