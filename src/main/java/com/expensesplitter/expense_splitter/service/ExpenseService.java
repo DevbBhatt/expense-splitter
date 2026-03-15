@@ -1,6 +1,7 @@
 package com.expensesplitter.expense_splitter.service;
 
 
+import com.expensesplitter.expense_splitter.dto.ExpenseRequest;
 import com.expensesplitter.expense_splitter.entity.Expense;
 import com.expensesplitter.expense_splitter.entity.Group;
 import com.expensesplitter.expense_splitter.entity.User;
@@ -29,24 +30,44 @@ public class ExpenseService {
     @Autowired
     private GroupMemberRepository groupMemberRepository;
 
-
-    public Expense addExpense(Long groupId,Long userId,Expense expense) {
-
-        Group group = groupRepository.findById(groupId)
-                .orElseThrow(()-> new RuntimeException("Group Not Found"));
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User Not Found"));
-
-        groupMemberRepository.findByGroupAndUser(group,user)
-                .orElseThrow(()-> new RuntimeException("Member Not found"));
-
-        expense.setCreatedAt(LocalDateTime.now());
-        expense.setGroup(group);
-        expense.setPaidBy(user);
+    @Autowired
+    private SplitService splitService;
 
 
-        return expenseRepository.save(expense);
-    }
+        public Expense addExpense(Long groupId, Long userId, ExpenseRequest request) {
+
+            Group group = groupRepository.findById(groupId)
+                    .orElseThrow(()-> new RuntimeException("Group Not Found"));
+            User user = userRepository.findById(userId)
+                    .orElseThrow(() -> new RuntimeException("User Not Found"));
+
+            groupMemberRepository.findByGroupAndUser(group,user)
+                    .orElseThrow(()-> new RuntimeException("Member Not found"));
+
+
+            if (!"EQUAL".equalsIgnoreCase(request.getSplitType()) &&
+                    !"EXACT".equalsIgnoreCase(request.getSplitType())) {
+                throw new RuntimeException("Invalid split type");
+            }
+
+            Expense expense = new Expense();
+
+            expense.setCreatedAt(LocalDateTime.now());
+            expense.setDescription(request.getDescription());
+            expense.setAmount(request.getAmount());
+            expense.setSplitType(request.getSplitType());
+
+            expense.setGroup(group);
+            expense.setPaidBy(user);
+
+
+
+             expense = expenseRepository.save(expense);
+
+            splitService.splitExpense(expense, request.getSplits());
+
+            return expense;
+        }
 
     public List<Expense> getGroupExpenses(Long groupId) {
 

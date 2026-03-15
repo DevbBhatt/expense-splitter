@@ -1,5 +1,6 @@
 package com.expensesplitter.expense_splitter.controller;
 
+import com.expensesplitter.expense_splitter.dto.ExpenseRequest;
 import com.expensesplitter.expense_splitter.entity.Expense;
 import com.expensesplitter.expense_splitter.service.ExpenseService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,8 +18,8 @@ public class ExpenseController {
     @PostMapping("/groups/{groupId}/expenses/{userId}")
     public Expense addExpense(@PathVariable Long groupId,
                               @PathVariable Long userId,
-                              @RequestBody Expense expense){
-        return expenseService.addExpense(groupId,userId,expense);
+                              @RequestBody ExpenseRequest request){
+        return expenseService.addExpense(groupId,userId,request);
     }
 
 
