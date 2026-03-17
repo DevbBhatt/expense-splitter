@@ -30,14 +30,16 @@ public class GroupService {
     }
 
     public Group updateGroup(Long id, Group group) {
-        Group group1 = groupRepository.findById(id).orElseThrow(()-> new RuntimeException("Group Not Found"));
+        Group group1 = groupRepository.findById(id)
+                .orElseThrow(()-> new RuntimeException("Group Not Found"));
 
         group1.setName(group.getName());
         return groupRepository.save(group1);
     }
 
     public Group deleteGroup(Long id) {
-        Group group = groupRepository.findById(id).orElseThrow(() -> new RuntimeException("Group Not found"));
+        Group group = groupRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Group Not found"));
 
         groupRepository.delete(group);
         return group;

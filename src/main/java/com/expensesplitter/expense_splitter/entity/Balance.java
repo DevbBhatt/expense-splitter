@@ -13,12 +13,17 @@ public class Balance {
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "user1_id")
-    private User user1;
+    @JoinColumn(name = "group_id")
+    private Group group;
 
     @ManyToOne
-    @JoinColumn(name = "user2_id")
-    private User user2;
+    @JoinColumn(name = "from_user_id")
+    private User fromUser;
+
+    @ManyToOne
+    @JoinColumn(name = "to_user_id")
+    private User toUser;
 
     private Double amount;
+
 }
