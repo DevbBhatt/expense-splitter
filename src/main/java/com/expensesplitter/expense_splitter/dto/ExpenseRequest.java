@@ -1,8 +1,8 @@
 package com.expensesplitter.expense_splitter.dto;
 
-import com.expensesplitter.expense_splitter.entity.User;
 
 import java.util.List;
+
 
 public class ExpenseRequest {
     private String description;

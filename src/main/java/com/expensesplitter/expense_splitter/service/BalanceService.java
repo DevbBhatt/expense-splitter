@@ -1,7 +1,7 @@
 package com.expensesplitter.expense_splitter.service;
 
 
-import com.expensesplitter.expense_splitter.dto.SplitRequest;
+import com.expensesplitter.expense_splitter.dto.SettlementDTO;
 import com.expensesplitter.expense_splitter.entity.Expense;
 import com.expensesplitter.expense_splitter.entity.ExpenseSplit;
 import com.expensesplitter.expense_splitter.entity.Group;
@@ -13,9 +13,8 @@ import com.expensesplitter.expense_splitter.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+
 
 @Service
 public class BalanceService {
@@ -78,7 +77,91 @@ public class BalanceService {
 
        Map<User,Double> map = calculateBalance(groupId);
 
-        return map.getOrDefault(user,0d);
+       return map.getOrDefault(user,0d);
 
     }
+
+    public List<SettlementDTO> getSettlements(Long groupId) {
+
+        Map<User,Double> map = calculateBalance(groupId);
+
+        List<Pair> creditors = new ArrayList<>();
+
+        List<Pair> debtors = new ArrayList<>();
+
+        for(User user:map.keySet()){
+            if(map.get(user) > 0) creditors.add(new Pair(user,map.get(user)));
+            if(map.get(user) < 0) debtors.add(new Pair(user,map.get(user)));
+        }
+
+        creditors.sort((p1, p2) -> Double.compare(p2.getAmount(), p1.getAmount()));
+        debtors.sort((p1, p2) -> Double.compare(p1.getAmount(), p2.getAmount()));
+
+
+        List<SettlementDTO> settle = new ArrayList<>();
+
+        while(!creditors.isEmpty() && !debtors.isEmpty()){
+
+
+            Double amount1 = creditors.get(0).getAmount();
+            Double amount2 = debtors.get(0).getAmount();
+
+            Double minAmount = Math.min(amount1,Math.abs(amount2));
+
+            SettlementDTO settlementDTO = new SettlementDTO();
+
+            settlementDTO.setFromUserId(debtors.get(0).getUser().getId());
+            settlementDTO.setToUserId(creditors.get(0).getUser().getId());
+            settlementDTO.setFromUserName(debtors.get(0).getUser().getName());
+            settlementDTO.setToUserName(creditors.get(0).getUser().getName());
+            settlementDTO.setAmount(minAmount);
+
+            double creditAmount = creditors.get(0).getAmount();
+            creditors.get(0).setAmount(creditAmount - minAmount);
+
+            double debitAmount = debtors.get(0).getAmount();
+            debtors.get(0).setAmount(debitAmount+minAmount);
+
+            if (Math.abs(creditors.get(0).getAmount()) < 0.0001) creditors.remove(0);
+            if (Math.abs(debtors.get(0).getAmount()) < 0.0001) debtors.remove(0);
+
+            settle.add(settlementDTO);
+
+
+        }
+
+        return settle;
+    }
+
+
+    class Pair{
+        User user;
+        Double amount;
+
+        public Pair(User user, Double amount) {
+            this.user = user;
+            this.amount = amount;
+        }
+
+        public User getUser() {
+            return user;
+        }
+
+        public void setUser(User user) {
+            this.user = user;
+        }
+
+        public Double getAmount() {
+            return amount;
+        }
+
+        public void setAmount(Double amount) {
+            this.amount = amount;
+        }
+    }
+
+
+
+
+
 }
