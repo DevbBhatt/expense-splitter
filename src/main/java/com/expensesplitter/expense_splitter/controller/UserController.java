@@ -2,6 +2,7 @@ package com.expensesplitter.expense_splitter.controller;
 
 import com.expensesplitter.expense_splitter.entity.User;
 import com.expensesplitter.expense_splitter.service.UserService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,7 +17,7 @@ public class UserController {
 
 
     @PostMapping()
-    public User createUser(@RequestBody User user) {
+    public User createUser(@Valid @RequestBody User user) {
        return userService.createUser(user);
     }
 
@@ -31,7 +32,7 @@ public class UserController {
     }
 
     @PutMapping("/{id}")
-    public User updateUser(@PathVariable Long id,
+    public User updateUser(@Valid @PathVariable Long id,
                            @RequestBody User user){
 
         return userService.updateUser(id,user);

@@ -1,20 +1,30 @@
 package com.expensesplitter.expense_splitter.dto;
 
 
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+
 import java.util.List;
 
 
 public class ExpenseRequest {
+
+    @NotBlank(message = "Description is required")
     private String description;
 
+    @NotNull(message = "Amount is required")
+    @Positive(message = "Amount must be positive")
     private Double amount;
 
 
     private Long paidBy;
 
+    @NotBlank(message = "Split type is required")
     private String splitType;
 
-    private List<SplitRequest> splits;
+    private List<@Valid SplitRequest> splits;
 
 
     public String getDescription() {

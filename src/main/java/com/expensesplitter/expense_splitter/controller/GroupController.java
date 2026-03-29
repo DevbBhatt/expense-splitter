@@ -2,6 +2,7 @@ package com.expensesplitter.expense_splitter.controller;
 
 import com.expensesplitter.expense_splitter.entity.Group;
 import com.expensesplitter.expense_splitter.service.GroupService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,7 +17,7 @@ public class GroupController {
     private GroupService groupService;
 
     @PostMapping()
-    public Group createGroup(@RequestBody Group group){
+    public Group createGroup(@Valid @RequestBody Group group){
 
         return groupService.createGroup(group);
     }
@@ -33,7 +34,7 @@ public class GroupController {
     }
 
     @PutMapping("/{id}")
-    public Group updateGroup(@PathVariable Long id,
+    public Group updateGroup(@Valid @PathVariable Long id,
                              @RequestBody Group group){
 
        return groupService.updateGroup(id,group);
