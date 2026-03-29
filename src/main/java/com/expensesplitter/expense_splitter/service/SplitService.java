@@ -46,7 +46,14 @@ public class SplitService {
     private void equalSplit(Expense expense) {
 
         Group group = expense.getGroup();
-        List<GroupMember> members = groupMemberRepository.findByGroup(group);
+
+        if(group.isDeleted()){
+            throw new RuntimeException("Group is deleted");
+        }
+
+        List<GroupMember> members = groupMemberRepository
+                .findByGroupAndIsDeletedFalseAndUser_IsDeletedFalse(group);
+
         int totalMembers = members.size();
         double amount = expense.getAmount();
 
@@ -71,9 +78,7 @@ public class SplitService {
 
     private void exactSplit(Expense expense,List<SplitRequest> splits) {
 
-
         double totalAmount = expense.getAmount();
-
         double sum = 0;
 
         for(SplitRequest split : splits){
@@ -88,6 +93,12 @@ public class SplitService {
             User user = userRepository.findById(split.getUserId())
                     .orElseThrow(() -> new RuntimeException("User Not found"));
 
+            if (user.isDeleted()) {
+                throw new RuntimeException("User is deleted: " + user.getId());
+            }
+           GroupMember member =  groupMemberRepository.findByGroupAndUser(expense.getGroup(), user)
+                    .orElseThrow(() -> new RuntimeException("User not in group"));
+            if(member.isDeleted()) throw new RuntimeException("Member not in Group");
 
             ExpenseSplit expenseSplit = new ExpenseSplit();
 
@@ -104,6 +115,11 @@ public class SplitService {
     public List<ExpenseSplit> getExpenseSplits(Long expenseId) {
         Expense expense = expenseRepository.findById(expenseId)
                 .orElseThrow(() -> new RuntimeException("Expense Not Found"));
+
+        if (expense.isDeleted()) {
+            throw new RuntimeException("Expense Not Found");
+        }
+
         return expenseSplitRepository.findByExpense(expense);
     }
 }

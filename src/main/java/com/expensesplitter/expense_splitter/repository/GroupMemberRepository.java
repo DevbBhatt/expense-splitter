@@ -15,4 +15,9 @@ public interface GroupMemberRepository extends JpaRepository<GroupMember,Long> {
     Optional<GroupMember> findByGroupAndUser(Group group, User user);
 
 
+    boolean existsByGroupIdAndUserId(Long groupId, Long userId);
+
+    List<GroupMember> findByGroupAndIsDeletedFalseAndUser_IsDeletedFalse(Group group);
+
+    Optional<GroupMember> findByGroupIdAndUserId(Long groupId, Long userId);
 }

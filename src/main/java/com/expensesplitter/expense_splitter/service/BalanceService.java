@@ -34,7 +34,6 @@ public class BalanceService {
 
 
     public Map<User,Double> getGroupBalance(Long groupId) {
-
         return calculateBalance(groupId);
     }
 
@@ -42,12 +41,15 @@ public class BalanceService {
         Group group = groupRepository.findById(groupId)
                 .orElseThrow(()->new RuntimeException("Group Not Found"));
 
+        if(group.isDeleted()) throw new RuntimeException("Group is Deleted");
+
         List<Expense> expenses = expenseRepository.findByGroup(group);
 
         Map<User,Double> map = new HashMap<>();
 
         for(Expense expense:expenses){
 
+            if(expense.isDeleted()) continue;
         List<ExpenseSplit> expenseSplits = expenseSplitRepository.findByExpense(expense);
 
             User user = expense.getPaidBy();
@@ -60,7 +62,6 @@ public class BalanceService {
 
             User user1 = expenseSplit.getUser();
             Double amount = expenseSplit.getAmount();
-
             map.put(user1, map.getOrDefault(user1, 0D) - amount);
 
         }
@@ -74,6 +75,7 @@ public class BalanceService {
 
         User user = userRepository.findById(userId)
                 .orElseThrow(()-> new RuntimeException("User Not Found"));
+
 
        Map<User,Double> map = calculateBalance(groupId);
 
@@ -120,14 +122,12 @@ public class BalanceService {
             creditors.get(0).setAmount(creditAmount - minAmount);
 
             double debitAmount = debtors.get(0).getAmount();
-            debtors.get(0).setAmount(debitAmount+minAmount);
+            debtors.get(0).setAmount(debitAmount + minAmount);
 
             if (Math.abs(creditors.get(0).getAmount()) < 0.0001) creditors.remove(0);
             if (Math.abs(debtors.get(0).getAmount()) < 0.0001) debtors.remove(0);
 
             settle.add(settlementDTO);
-
-
         }
 
         return settle;

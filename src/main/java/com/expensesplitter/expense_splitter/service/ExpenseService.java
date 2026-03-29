@@ -48,9 +48,17 @@ public class ExpenseService {
             User user = userRepository.findById(userId)
                     .orElseThrow(() -> new RuntimeException("User Not Found"));
 
-            groupMemberRepository.findByGroupAndUser(group,user)
-                    .orElseThrow(()-> new RuntimeException("Member Not found"));
+            if(group.isDeleted()){
+                throw new RuntimeException("Group is deleted");
+            }
 
+            if(user.isDeleted()){
+                throw new RuntimeException("User is deleted");
+            }
+
+            GroupMember member = groupMemberRepository.findByGroupAndUser(group,user)
+                    .orElseThrow(()-> new RuntimeException("Member Not found"));
+            if(member.isDeleted()) throw new RuntimeException("Member is Deleted");
 
             if (!"EQUAL".equalsIgnoreCase(request.getSplitType()) &&
                     !"EXACT".equalsIgnoreCase(request.getSplitType())) {
@@ -59,14 +67,16 @@ public class ExpenseService {
 
 
             // Important Validation
-            List<GroupMember> members = groupMemberRepository.findByGroup(group);
+            List<GroupMember> members = groupMemberRepository.findByGroup(group)
+                    .stream().filter(m-> !m.isDeleted()).toList();
+
             if("EXACT".equalsIgnoreCase(request.getSplitType()) &&
                     members.size() != request.getSplits().size()) {
                 throw new RuntimeException("Splits size must match number of users in the group for EXACT type");
             }
 
             // ✅ VALIDATION FIRST
-            validateSplits(request);
+            validateSplits(request,group);
 
             Expense expense = new Expense();
 
@@ -88,35 +98,51 @@ public class ExpenseService {
             return expense;
         }
 
-    private void validateSplits(ExpenseRequest request) {
-            if("EXACT".equalsIgnoreCase(request.getSplitType())){
+    private void validateSplits(ExpenseRequest request, Group group) {
 
-             if(request.getSplits() == null || request.getSplits().isEmpty()){
-                 throw new RuntimeException("Splits Required For EXACT type ");
-             }
+        if ("EXACT".equalsIgnoreCase(request.getSplitType())) {
 
-                // duplicate users
-                Set<Long> userIds = new HashSet<>();
-                for (SplitRequest s : request.getSplits()) {
-                    if (!userIds.add(s.getUserId())) {
-                        throw new RuntimeException("Duplicate user in splits: " + s.getUserId());
-                    }
+            if (request.getSplits() == null || request.getSplits().isEmpty()) {
+                throw new RuntimeException("Splits required for EXACT type");
+            }
+
+            Set<Long> userIds = new HashSet<>();
+            double sum = 0.0;
+
+            for (SplitRequest s : request.getSplits()) {
+
+                // ❗ Duplicate user check
+                if (!userIds.add(s.getUserId())) {
+                    throw new RuntimeException("Duplicate user in splits: " + s.getUserId());
                 }
 
+                // ❗ Amount validation
+                if (s.getAmount() == null || s.getAmount() <= 0) {
+                    throw new RuntimeException("Invalid split amount for user: " + s.getUserId());
+                }
 
-             double sum = 0.0;
+                // ❗ User exist check
+                User user = userRepository.findById(s.getUserId())
+                        .orElseThrow(() -> new RuntimeException("User not found: " + s.getUserId()));
 
-             for(SplitRequest s: request.getSplits()) {
-                 sum += s.getAmount();
-             }
+                // ❗ Deleted user check
+                if (user.isDeleted()) {
+                    throw new RuntimeException("User is deleted: " + s.getUserId());
+                }
 
+                // ❗ Group membership check
+                groupMemberRepository.findByGroupAndUser(group, user)
+                        .orElseThrow(() -> new RuntimeException("User is not member of group: " + s.getUserId()));
 
-             if(sum != request.getAmount()){
-                 throw new RuntimeException("Split Total must MATCH Expense amount");
-             }
+                sum += s.getAmount();
+            }
+
+            // ❗ Floating precision safe check
+            if (Math.abs(sum - request.getAmount()) > 0.01) {
+                throw new RuntimeException("Split total must match expense amount");
+            }
         }
     }
-
 
 
     public List<Expense> getGroupExpenses(Long groupId) {
@@ -124,14 +150,20 @@ public class ExpenseService {
         Group group = groupRepository.findById(groupId)
                 .orElseThrow(()-> new RuntimeException("Group Not Found"));
 
-        return expenseRepository.findByGroup(group);
+        if(group.isDeleted()) throw new RuntimeException("Group is deleted");
+
+        return expenseRepository.findByGroupAndIsDeletedFalse(group);
 
     }
 
     public Expense getExpenseById(Long expenseId) {
 
-        return expenseRepository.findById(expenseId)
+        Expense expense =  expenseRepository.findById(expenseId)
                 .orElseThrow(()-> new RuntimeException("Expense Not Found"));
+
+        if(expense.isDeleted()) throw new RuntimeException("expense is deleted");
+
+        return expense;
 
     }
 
@@ -143,7 +175,8 @@ public class ExpenseService {
             Expense expense = expenseRepository.findById(expenseId)
                     .orElseThrow(()->new RuntimeException("Expense Not Found"));
 
-             expenseRepository.delete(expense);
+            expense.setDeleted(true);
+             expenseRepository.save(expense);
              return expense;
     }
 

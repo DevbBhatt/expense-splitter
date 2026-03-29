@@ -12,4 +12,5 @@ public interface ExpenseRepository extends JpaRepository<Expense,Long> {
 
     List<Expense> findByGroup(Group group);
 
+    List<Expense> findByGroupAndIsDeletedFalse(Group group);
 }

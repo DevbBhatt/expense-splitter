@@ -7,7 +7,9 @@ import java.time.LocalDateTime;
 
 @Data
 @Entity
-@Table(name = "group_members")
+@Table(name = "group_members",
+        uniqueConstraints = @UniqueConstraint(columnNames = {"group_id", "user_id"}))
+
 public class GroupMember {
 
     @Id
@@ -23,6 +25,9 @@ public class GroupMember {
     private User user;
 
     private LocalDateTime joinedAt;
+
+    private boolean isDeleted = false;
+
 }
 
 

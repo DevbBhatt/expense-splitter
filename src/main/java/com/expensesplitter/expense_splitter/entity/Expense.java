@@ -29,4 +29,7 @@ public class Expense {
     private String splitType;
 
     private LocalDateTime createdAt;
+
+    private boolean isDeleted = false;
+
 }

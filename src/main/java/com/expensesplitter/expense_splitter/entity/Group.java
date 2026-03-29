@@ -22,4 +22,7 @@ public class Group {
 
     private LocalDateTime createdAt;
 
+    private boolean isDeleted = false;
+
+
 }

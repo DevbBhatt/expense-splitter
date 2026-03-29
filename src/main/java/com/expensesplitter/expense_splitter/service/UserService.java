@@ -16,28 +16,46 @@ public class UserService {
 
     public User createUser(User user)  {
 
-        if(userRepository.existsByEmail(user.getEmail())){
+
+        User existingUser = userRepository.findByEmail(user.getEmail());
+
+        if(existingUser != null){
+
+            if(existingUser.isDeleted()){
+                existingUser.setDeleted(false);
+                return userRepository.save(existingUser);
+            }
+
             throw new RuntimeException("Email already exists");
         }
 
         user.setCreatedAt(LocalDateTime.now());
         return userRepository.save(user);
+
+
     }
 
 
     public List<User> getAllUsers() {
-        return userRepository.findAll();
+        return userRepository.findByIsDeletedFalse();
     }
+
 
     public User getUserById(Long id) {
 
-       return userRepository.findById(id).orElseThrow(() -> new RuntimeException("User Not found"));
+      User user = userRepository.findById(id)
+              .orElseThrow(() -> new RuntimeException("User Not found"));
+
+      if(user.isDeleted()) throw new RuntimeException("User is Deleted");
+
+      return user;
     }
 
     public User updateUser(Long id, User user) {
 
         User user1 = userRepository.findById(id).orElseThrow(() ->new RuntimeException("User Not found"));
 
+        if(user1.isDeleted()) throw new RuntimeException("User is Deleted");
        user1.setName(user.getName());
        user1.setEmail(user.getEmail());
 
@@ -45,9 +63,13 @@ public class UserService {
     }
 
     public User deleteById(Long id) {
-        User user = userRepository.findById(id).orElseThrow(() -> new RuntimeException("User Not found"));
-
-         userRepository.delete(user);
+        User user = userRepository.findById(id).
+                orElseThrow(() -> new RuntimeException("User Not found"));
+        if(user.isDeleted()){
+            throw new RuntimeException("User already deleted");
+        }
+        user.setDeleted(true);
+         userRepository.save(user);
          return user;
     }
 }
