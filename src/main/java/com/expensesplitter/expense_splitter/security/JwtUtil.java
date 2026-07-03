@@ -6,6 +6,7 @@ import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.util.Date;
 import java.util.function.Function;
@@ -13,7 +14,8 @@ import java.util.function.Function;
 @Component
 public class JwtUtil {
 
-    private final String SECRET = "9f7c3b2a8e4d1f6a5c9b2e7d3a8f4c1e6b9d2a7f5c3e1a8b";
+    @Value("${jwt.secret}")
+    private String SECRET;
 
     public String generateToken(String email) {
         return Jwts.builder()
